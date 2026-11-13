@@ -44,7 +44,7 @@ public class serverManager : NetworkBehaviour
     //public GameObject raceStartDude;
     //public GameObject raceEndDude;
 
-     public NativeArray<FixedString32Bytes> names = new NativeArray<FixedString32Bytes>(8, Allocator.Persistent);
+    public NativeArray<FixedString32Bytes> names = new NativeArray<FixedString32Bytes>(8, Allocator.Persistent);
     private void Awake()
     {
         m_NetworkManager = GetComponent<NetworkManager>();
