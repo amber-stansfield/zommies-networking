@@ -1,9 +1,14 @@
+using System.Numerics;
 using Unity.Netcode;
+using UnityEditor.Animations.Rigging;
 using UnityEngine;
 
 public class CustomNetworkTransform : NetworkBehaviour
 {
-    private Vector3 lastPosition, currentPosition;
+    private UnityEngine.Vector3 lastPosition, currentPosition;
+    private UnityEngine.Quaternion lastRotation, currentRotation;
+
+    float tolerance = 12f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -12,15 +17,18 @@ public class CustomNetworkTransform : NetworkBehaviour
     }
 
     // Update is called once per frame
-    void LateUpdate()
+    void Update()
     {
         if (!IsOwner) { return; }
         currentPosition = this.transform.position;
         setPositionServerRpc(currentPosition);
+
+        currentRotation = this.transform.rotation;
+        setRotationServerRpc(currentRotation);
     }
 
     [ServerRpc]
-    void setPositionServerRpc(Vector3 position)
+    void setPositionServerRpc(UnityEngine.Vector3 position)
     {
         this.transform.position = position;
         setPositionClientRpc(position);
@@ -28,8 +36,29 @@ public class CustomNetworkTransform : NetworkBehaviour
 
 
     [ClientRpc]
-    void setPositionClientRpc(Vector3 position)
+    void setPositionClientRpc(UnityEngine.Vector3 position)
     {
+
+        if (IsLocalPlayer && UnityEngine.Vector3.Distance(this.transform.position, position) < tolerance)
+        {
+            return;
+        }
+
         this.transform.position = position;
+    }
+
+    [ServerRpc]
+    void setRotationServerRpc(UnityEngine.Quaternion rotation)
+    {
+        this.transform.rotation = rotation;
+        setRotationClientRpc(rotation);
+    }
+
+
+    [ClientRpc]
+    void setRotationClientRpc(UnityEngine.Quaternion rotation)
+    {
+        if (IsOwner) { return; }
+        this.transform.rotation = rotation;
     }
 }

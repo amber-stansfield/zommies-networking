@@ -88,6 +88,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &1477860045018504451
 GameObject:
@@ -177,6 +178,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &2241080232413835227
 GameObject:
@@ -250,6 +252,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6240336983558261418}
   - component: {fileID: 5819487988591245906}
+  - component: {fileID: 2984420949325153510}
   m_Layer: 0
   m_Name: right hand ik target follower
   m_TagString: Untagged
@@ -285,6 +288,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   HandIkTarget: {fileID: 8656887602510571621}
+--- !u!114 &2984420949325153510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941115039917047763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2a8effb9c0e39d4ba6bf5c3ab587a2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomNetworkTransform
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &3864583671410730492
 GameObject:
   m_ObjectHideFlags: 0
@@ -296,6 +312,8 @@ GameObject:
   - component: {fileID: 7809115018980229630}
   - component: {fileID: 537211574267888579}
   - component: {fileID: 998962104678647049}
+  - component: {fileID: 8223462180619866217}
+  - component: {fileID: 1201938647152103525}
   m_Layer: 0
   m_Name: gun
   m_TagString: pickupable
@@ -369,6 +387,45 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &8223462180619866217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3864583671410730492}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 3180490278
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &1201938647152103525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3864583671410730492}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2a8effb9c0e39d4ba6bf5c3ab587a2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomNetworkTransform
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &4575373561622547414
 GameObject:
   m_ObjectHideFlags: 0
@@ -457,6 +514,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &6352176844406072437
 GameObject:
@@ -546,6 +604,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &6394371309747958248
 GameObject:
@@ -557,6 +616,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3184732537827628989}
   - component: {fileID: 1666769549759335342}
+  - component: {fileID: 3539086200705272829}
   m_Layer: 0
   m_Name: left hand ik target follower
   m_TagString: Untagged
@@ -592,6 +652,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   HandIkTarget: {fileID: 829138693353297212}
+--- !u!114 &3539086200705272829
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6394371309747958248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2a8effb9c0e39d4ba6bf5c3ab587a2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomNetworkTransform
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &8003381397511347104
 GameObject:
   m_ObjectHideFlags: 0
@@ -680,6 +753,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &8027777703718954494
 GameObject:
@@ -769,6 +843,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &8240949725177811151
 GameObject:
@@ -781,6 +856,7 @@ GameObject:
   - component: {fileID: 3467362963000729081}
   - component: {fileID: 7684251579007861354}
   - component: {fileID: 7477247823920472723}
+  - component: {fileID: 4781876045119331082}
   m_Layer: 0
   m_Name: m8a7
   m_TagString: Untagged
@@ -839,7 +915,7 @@ Animator:
   m_GameObject: {fileID: 8240949725177811151}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 8f72e9556aa75f94d96034202ddc1d68, type: 2}
+  m_Controller: {fileID: 9100000, guid: c2d4fd2b54f82d8438a2e97d5075eb6d, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -851,3 +927,16 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4781876045119331082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8240949725177811151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2a8effb9c0e39d4ba6bf5c3ab587a2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomNetworkTransform
+  ShowTopMostFoldoutHeaderGroup: 1

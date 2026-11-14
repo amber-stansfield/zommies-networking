@@ -2,7 +2,7 @@
 - Project name: zommies
 - Unity version: Unity 6000.5.7f1
 - Active game object:
-  - Name: serverManager
+  - Name: player
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

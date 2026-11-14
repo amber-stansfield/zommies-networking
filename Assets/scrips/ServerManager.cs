@@ -231,8 +231,8 @@ public class serverManager : NetworkBehaviour
 
     private IEnumerator startGame()
     {
-        loadingSceneClientRpc();
-        yield return new WaitForSeconds(0.01f);
+        loadingScene();
+        yield return new WaitForSeconds(0.2f);
         spawnDudesServerRpc();
 
     }
@@ -247,7 +247,7 @@ public class serverManager : NetworkBehaviour
             
             
             GameObject playerInstance = Instantiate(playerPrefab);
-            NetworkObject networkObject = playerInstance.GetComponentInChildren<NetworkObject>();
+            NetworkObject networkObject = playerInstance.GetComponent<NetworkObject>();
             Debug.Log(networkObject);
             networkObject.SpawnAsPlayerObject(client.Key);
             Debug.Log(names[(int)((ulong)i + 3)]);
@@ -297,10 +297,9 @@ public class serverManager : NetworkBehaviour
         }
     }
 
-    [ClientRpc]
-    void loadingSceneClientRpc()
+    void loadingScene()
     {
-        SceneManager.LoadScene("OutdoorsScene");
+        NetworkManager.SceneManager.LoadScene("OutdoorsScene",LoadSceneMode.Single);
     }
     private void StartButtons()
     {

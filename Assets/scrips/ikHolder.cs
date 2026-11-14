@@ -1,18 +1,21 @@
+using System;
+using Unity.Netcode;
 using UnityEngine;
 
-public class ikHolder : MonoBehaviour
+public class ikHolder : NetworkBehaviour
 {
-    private Transform camera;
+    [SerializeField] Transform camera;
+    [SerializeField] Transform cameraPos;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        camera = Camera.main.transform;
+        if (!IsLocalPlayer) { camera = cameraPos; }
     }
 
     // Update is called once per frame
     void Update()
     {
-        this.transform.position = camera.transform.position;
-        this.transform.eulerAngles = new Vector3 (0.0f, camera.transform.eulerAngles.y, 0.0f);
+        this.transform.position = camera.position;
+        this.transform.eulerAngles = new Vector3 (0.0f, camera.eulerAngles.y, 0.0f);
     }
 }

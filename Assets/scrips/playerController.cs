@@ -55,6 +55,7 @@ public class playerGamer : NetworkBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+
         if (!IsOwner)
         {
             //this.GetComponent<MeshRenderer>().material = null;
@@ -63,6 +64,7 @@ public class playerGamer : NetworkBehaviour
 
         playerData = GetComponent<PlayerData>();
         cameraGuy.gameObject.SetActive(true);
+        //cameraGuy.gameObject.GetComponent<camera>().enabled = true;
         health = startingHealth;
 
         staminaTime = defaultStamina;
@@ -107,7 +109,10 @@ public class playerGamer : NetworkBehaviour
 
     }
 
-
+    protected bool OnIsServerAuthoritative()
+    {
+        return false;
+    }
 
 
 
@@ -352,28 +357,29 @@ public class playerGamer : NetworkBehaviour
 
         if (Input.GetKey(KeyCode.E) && heldItem == null)
         {
-            pickUpItem();
+            pickUpItemServerRpc();
         }
 
         if (Input.GetKeyDown(KeyCode.G) && heldItem != null && !heldItem.transform.GetChild(0).GetComponent<gun>().isAnimating)
         {
-            dropItem();
+            dropItemServerRpc();
         }
     }
 
-    void pickUpItem()
+    [ServerRpc]
+    void pickUpItemServerRpc()
     {
         Debug.DrawRay(cameraPos.position, cameraPos.forward, Color.red);
         RaycastHit hit;
         if (Physics.Raycast(cameraPos.position, cameraPos.forward, out hit, 500))
         {
-            if (hit.transform.CompareTag("pickupable"))
+            if (hit.transform.CompareTag("pickupable") && hit.transform.GetComponentInChildren<gun>().owner == null)
             {
                 heldItem = hit.transform.gameObject;
 
                 hit.transform.GetChild(0).GetComponent<gun>().interaction(this.gameObject, cameraPos.GetComponent<camera>().gunPos.transform, cameraPos.GetComponent<camera>().gunAimPos.transform);
 
-                hit.transform.SetParent(cameraPos);
+                //hit.transform.SetParent(cameraPos);
 
                 hit.transform.position = cameraPos.GetComponent<camera>().gunPos.transform.position;
 
@@ -394,13 +400,14 @@ public class playerGamer : NetworkBehaviour
         }
     }
 
-    void dropItem()
+    [ServerRpc]
+    void dropItemServerRpc()
     {
         heldItem.transform.GetChild(0).transform.GetComponent<gun>().owner = null;
         heldItem.transform.GetComponent<Rigidbody>().isKinematic = false;
         heldItem.transform.GetComponent<BoxCollider>().isTrigger = false;
 
-        heldItem.transform.SetParent(null);
+        //heldItem.transform.SetParent(null);
 
         heldItem = null;
         leftArmRig.GetComponent<ChainIKConstraint>().data.target = defaultLeftArmTarget;

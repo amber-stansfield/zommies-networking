@@ -19,6 +19,8 @@ public class gun : MonoBehaviour
 
     private Animator animator;
 
+    //private Transform parent;
+
     private float adsPos;
 
     public bool isAnimating;
@@ -41,6 +43,9 @@ public class gun : MonoBehaviour
 
         //rightHandIkTargetFollower.transform.position = rightHandIkTarget.transform.position;
 
+        this.transform.parent.position = gunPos.transform.position;
+
+        this.transform.parent.rotation = gunPos.transform.rotation;
 
         if (Input.GetKeyDown(KeyCode.I) && adsPos < 0.03f)
         {
