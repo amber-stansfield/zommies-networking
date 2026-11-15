@@ -45,7 +45,7 @@ public class targetFollower : MonoBehaviour
         Transform lastpos = target;
         Vector3 startingPos = this.transform.position;
         Vector3 direction = (target.position - startingPos).normalized;
-        Vector3 overshootPos = target.position + direction / 3;
+        Vector3 overshootPos = target.position + (direction / 3)*3;
         while (timer < 1)
         {
 

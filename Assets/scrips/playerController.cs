@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Security;
 using Unity.Mathematics;
 using Unity.Netcode;
@@ -23,12 +24,12 @@ public class playerGamer : NetworkBehaviour
 
     [SerializeField] KeyCode forward, backward, left, right, sprint, crouch, jump;
     [SerializeField] int startingHealth;
-    [SerializeField] Transform cameraPos;
+    [SerializeField] Transform cameraPos, CameraGunPos;
     [SerializeField] bool crouchPressed, isVulerable;
     [SerializeField] UnityEngine.UI.Image healthOverlayImage, sliderFillImage;
 
     [SerializeField] GameObject leftArmRig, rightArmRig, armParent;
-  
+
 
     [SerializeField] Transform defaultLeftArmTarget, defaultRightArmTarget;
 
@@ -44,6 +45,8 @@ public class playerGamer : NetworkBehaviour
     private bool recovering, Grounded, isSprinting, sprintPressed, jumpPressed, badRecovering;
 
     private Vector3 startingCameraLocalPos, playerVelocity;
+
+    private GameObject tempHit;
 
     private GameObject heldItem;
     [SerializeField] Transform cameraGuy;
@@ -357,7 +360,8 @@ public class playerGamer : NetworkBehaviour
 
         if (Input.GetKey(KeyCode.E) && heldItem == null)
         {
-            pickUpItemServerRpc();
+            pickUpItemServerRpc(cameraPos.position, cameraPos.forward);
+
         }
 
         if (Input.GetKeyDown(KeyCode.G) && heldItem != null && !heldItem.transform.GetChild(0).GetComponent<gun>().isAnimating)
@@ -366,50 +370,72 @@ public class playerGamer : NetworkBehaviour
         }
     }
 
-    [ServerRpc]
-    void pickUpItemServerRpc()
+    [Rpc(SendTo.Server,InvokePermission = RpcInvokePermission.Everyone)]
+    void pickUpItemServerRpc(Vector3 camPos,Vector3 camForward)
     {
-        Debug.DrawRay(cameraPos.position, cameraPos.forward, Color.red);
+        Debug.DrawRay(camPos, cameraPos.forward, Color.red);
         RaycastHit hit;
-        if (Physics.Raycast(cameraPos.position, cameraPos.forward, out hit, 500))
+        if (Physics.Raycast(camPos, camForward, out hit, 500))
         {
             if (hit.transform.CompareTag("pickupable") && hit.transform.GetComponentInChildren<gun>().owner == null)
             {
-                heldItem = hit.transform.gameObject;
+                tempHit = hit.transform.gameObject;
+                tempHit.transform.GetChild(0).GetComponent<gun>().interaction(this.gameObject,/* IsOwner ? */cameraPos.GetComponent<camera>().gunPos.transform/* : CameraGunPos*/,
+                   cameraPos.GetComponent<camera>().gunAimPos.transform, cameraPos, leftArmRig, rightArmRig, armParent);
+                heldItem = tempHit;
 
-                hit.transform.GetChild(0).GetComponent<gun>().interaction(this.gameObject, cameraPos.GetComponent<camera>().gunPos.transform, cameraPos.GetComponent<camera>().gunAimPos.transform);
-
-                //hit.transform.SetParent(cameraPos);
-
-                hit.transform.position = cameraPos.GetComponent<camera>().gunPos.transform.position;
-
-                hit.transform.rotation = cameraPos.GetComponent<camera>().gunPos.transform.rotation;
-
-                hit.transform.GetComponent<Rigidbody>().isKinematic = true;
-
-                hit.transform.GetComponent<BoxCollider>().isTrigger = true;
-
-                leftArmRig.GetComponent<ChainIKConstraint>().data.target = hit.transform.GetChild(1).transform;
-                rightArmRig.GetComponent<ChainIKConstraint>().data.target = hit.transform.GetChild(2).transform;
-
-                armParent.gameObject.SetActive(false);
-                armParent.gameObject.SetActive(true);
-
+                pickUpItemClientRpc(camPos, camForward);
             }
-
         }
     }
+
+    [ClientRpc]
+    void pickUpItemClientRpc(Vector3 camPos, Vector3 camForward)
+    {
+        Debug.DrawRay(camPos, camForward, Color.red);
+        RaycastHit hit;
+        if (Physics.Raycast(camPos, camForward, out hit, 500))
+        {
+            if (hit.transform.CompareTag("pickupable") && hit.transform.GetComponentInChildren<gun>().owner == null)
+            {
+                tempHit = hit.transform.gameObject;
+                tempHit.transform.GetChild(0).GetComponent<gun>().interaction(this.gameObject,/* IsOwner ? */cameraPos.GetComponent<camera>().gunPos.transform/* : CameraGunPos*/,
+                   cameraPos.GetComponent<camera>().gunAimPos.transform, cameraPos, leftArmRig, rightArmRig, armParent);
+                heldItem = tempHit;
+            }
+        }
+    }
+
 
     [ServerRpc]
     void dropItemServerRpc()
     {
-        heldItem.transform.GetChild(0).transform.GetComponent<gun>().owner = null;
-        heldItem.transform.GetComponent<Rigidbody>().isKinematic = false;
-        heldItem.transform.GetComponent<BoxCollider>().isTrigger = false;
 
         //heldItem.transform.SetParent(null);
+        if (IsHost)
+        {
+            heldItem.GetComponentInChildren<gun>().drop();
+            heldItem = null;
+        }
+        leftArmRig.GetComponent<ChainIKConstraint>().data.target = defaultLeftArmTarget;
+        rightArmRig.GetComponent<ChainIKConstraint>().data.target = defaultRightArmTarget;
 
-        heldItem = null;
+
+        armParent.gameObject.SetActive(false);
+        armParent.gameObject.SetActive(true);
+        dropItemClientRpc();
+    }
+
+    [ClientRpc]
+    void dropItemClientRpc()
+    {
+        //if (IsOwner) { return; }
+        if (heldItem != null)
+        {
+            heldItem.GetComponentInChildren<gun>().drop();
+            heldItem = null;
+        }
+        
         leftArmRig.GetComponent<ChainIKConstraint>().data.target = defaultLeftArmTarget;
         rightArmRig.GetComponent<ChainIKConstraint>().data.target = defaultRightArmTarget;
 

@@ -253,15 +253,15 @@ public class serverManager : NetworkBehaviour
             Debug.Log(names[(int)((ulong)i + 3)]);
 
 
-            int plap = UnityEngine.Random.Range(0, 1);
-            if (plap == 0)
-            {
-                networkObject.transform.position = new Vector3(2.81999993f, 1.07000005f, -23.75f);
-            }
-            else
-            {
-                networkObject.transform.position = new Vector3(6.11999989f, 1.39999998f, -22.3899994f);
-            }
+            //int plap = UnityEngine.Random.Range(0, 1);
+            //if (plap == 0)
+            //{
+            //    networkObject.transform.position = new Vector3(2.81999993f, 1.07000005f, -23.75f);
+            //}
+            //else
+            //{
+            //    networkObject.transform.position = new Vector3(6.11999989f, 1.07000005f, -22.3899994f);
+            //}
 
             networkObject.transform.GetChild(0).GetComponentInChildren<TMP_Text>().text = names[(int)((ulong)i + 3)].ToString();
             //networkObject.transform.GetChild(0).GetComponentInChildren<TMP_Text>().color = selectedColour;

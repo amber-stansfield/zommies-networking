@@ -899,6 +899,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e58d17add597f944183e26fcbcd11e69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   owner: {fileID: 0}
   leftHandIkTargetFollower: {fileID: 3184732537827628989}
   rightHandIkTargetFollower: {fileID: 6240336983558261418}

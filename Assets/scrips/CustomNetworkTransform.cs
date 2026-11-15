@@ -2,6 +2,7 @@ using System.Numerics;
 using Unity.Netcode;
 using UnityEditor.Animations.Rigging;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class CustomNetworkTransform : NetworkBehaviour
 {
@@ -9,6 +10,7 @@ public class CustomNetworkTransform : NetworkBehaviour
     private UnityEngine.Quaternion lastRotation, currentRotation;
 
     float tolerance = 12f;
+    float rotationTolerance = 0.99f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -44,7 +46,7 @@ public class CustomNetworkTransform : NetworkBehaviour
             return;
         }
 
-        this.transform.position = position;
+        this.transform.position = UnityEngine.Vector3.Lerp(this.transform.position,position,0.4f);
     }
 
     [ServerRpc]
@@ -58,7 +60,10 @@ public class CustomNetworkTransform : NetworkBehaviour
     [ClientRpc]
     void setRotationClientRpc(UnityEngine.Quaternion rotation)
     {
-        if (IsOwner) { return; }
-        this.transform.rotation = rotation;
+        if (IsLocalPlayer /*&& (UnityEngine.Quaternion.Dot(this.transform.rotation,rotation) > Mathf.Abs(rotationTolerance))*/)
+        {
+            return;
+        }
+        this.transform.rotation = UnityEngine.Quaternion.Lerp(this.transform.rotation,rotation,0.3f);
     }
 }
