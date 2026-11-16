@@ -77,7 +77,6 @@ public class gun : NetworkBehaviour
 
     private void LateUpdate()
     {
-        Debug.Log(adsPos);
         if (owner == null)
         {
             return;

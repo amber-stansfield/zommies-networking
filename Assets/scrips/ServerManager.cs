@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TMPro;
@@ -12,10 +14,12 @@ using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static System.Net.Mime.MediaTypeNames;
+using static Unity.U2D.Physics.PhysicsLayers;
 
 
 
@@ -40,11 +44,20 @@ public class serverManager : NetworkBehaviour
 
     public Color selectedColour = new Color(0, 0, 0);
 
+    public class PlayerData
+    {
+        public string name;
+        public ulong clientID;
+        public Color Colour;
+    }
+    Dictionary<ulong, PlayerData> players = new();
+
     //public bool raceInProgress;
     //public GameObject raceStartDude;
     //public GameObject raceEndDude;
 
-    public NativeArray<FixedString32Bytes> names = new NativeArray<FixedString32Bytes>(8, Allocator.Persistent);
+    //public NativeArray<FixedString32Bytes> names = new NativeArray<FixedString32Bytes>(8, Allocator.Persistent);
+    //public Dictionary<int, string> names = new Dictionary<int, string>();
     private void Awake()
     {
         m_NetworkManager = GetComponent<NetworkManager>();
@@ -73,10 +86,14 @@ public class serverManager : NetworkBehaviour
         {
             return;
         }
-        await StartClientWIthRelay(joinCodeInput.text);
+        await StartClientWithRelay(joinCodeInput.text);
         mainMenuHolder.SetActive(false);
         subMenuHolder.SetActive(true);
 
+        await AuthenticationService.Instance.UpdatePlayerNameAsync(usernameInput.text);
+        string playerName = AuthenticationService.Instance.PlayerName.Substring(0, AuthenticationService.Instance.PlayerName.Length - 6);
+        Debug.Log($"clap {playerName}");
+        StartCoroutine(addPlayer(playerName));
         //AddToUserListServerRpc();
     }
 
@@ -92,6 +109,17 @@ public class serverManager : NetworkBehaviour
         mainMenuHolder.SetActive(false);
         startButton.SetActive(true);
         subMenuHolder.SetActive(true);
+
+        string playerName = AuthenticationService.Instance.PlayerName.Substring(0, AuthenticationService.Instance.PlayerName.Length - 6);
+        players[NetworkManager.Singleton.LocalClientId] = new PlayerData
+        {
+            clientID = NetworkManager.Singleton.LocalClientId,
+            name = playerName,
+            Colour = selectedColour
+        };
+
+        inGameUserList.text += $"\n{players[0].name}";
+        Debug.Log($" utter gaming {players[NetworkManager.Singleton.LocalClientId].clientID}");
     }
 
     private async Task<string> StartHostWithRelay(int maxConnections = 3)
@@ -101,63 +129,44 @@ public class serverManager : NetworkBehaviour
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
         string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
         await AuthenticationService.Instance.UpdatePlayerNameAsync(usernameInput.text);
-        string playerName = AuthenticationService.Instance.PlayerName.Substring(0, AuthenticationService.Instance.PlayerName.Length - 6);
-        StartCoroutine(addPlayer(playerName));
-        if (IsOwner)
-        {
-            playerData.GetComponent<PlayerData>().playerName = playerName;
-            playerData.GetComponent<PlayerData>().playerID = AuthenticationService.Instance.PlayerId;
-            playerData.GetComponent<PlayerData>().playerColour = selectedColour;
-        }
+
+        //players[NetworkManager.Singleton.LocalClientId] = new PlayerData
+        //{
+        //    clientID = NetworkManager.Singleton.LocalClientId,
+        //    name = playerName,
+        //    Colour = selectedColour
+        //};
+
 
         return NetworkManager.Singleton.StartHost() ? joinCode : null;
     }
 
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    void updateInGameUserlistServerRpc(string name)
+    {
+        inGameUserList.text += name;
+        updateInGameUserlistClientRpc(name);
+    }
+    [ClientRpc]
+    void updateInGameUserlistClientRpc(string name)
+    {
+        inGameUserList.text += name;
+    }
 
-    private async Task<bool> StartClientWIthRelay(string joinCode)
+    private async Task<bool> StartClientWithRelay(string joinCode)
     {
         JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
         var relayServerData = joinAllocation.ToRelayServerData("udp");
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData((relayServerData));
         mainMenuHolder.SetActive(false);
         subMenuHolder.SetActive(true);
-        await AuthenticationService.Instance.UpdatePlayerNameAsync(usernameInput.text);
-        string playerName = AuthenticationService.Instance.PlayerName.Substring(0, AuthenticationService.Instance.PlayerName.Length - 6);
-        StartCoroutine(addPlayer(playerName));
-        if (IsOwner)
-        {
-            playerData.GetComponent<PlayerData>().playerName = playerName;
-            playerData.GetComponent<PlayerData>().playerID = AuthenticationService.Instance.PlayerId;
-            playerData.GetComponent<PlayerData>().playerColour = selectedColour;
-        }
         //askforConnectedClientsServerRpc(name);
-        //AddPlayerToReg((ulong)NetworkManager.ConnectedClients.Count + 3, gamers);
 
         return !string.IsNullOrEmpty(joinCode) && NetworkManager.Singleton.StartClient();
 
     }
-    void AddPlayerToReg(ulong playerIndex, FixedString32Bytes playerName)
-    {
-        names[(int)playerIndex] = playerName;
-    }
 
-    //[ServerRpc(RequireOwnership = false)]
-    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    void askforConnectedClientsServerRpc(FixedString32Bytes name)
-    {
-        int count = NetworkManager.ConnectedClients.Count;
-        returnConnectedClientRpc(count, name);
-    }
-
-    [ClientRpc]
-    void returnConnectedClientRpc(int count, FixedString32Bytes name)
-    {
-        names[(int)((ulong)count + 2)] = name;
-        Debug.Log($" utter gaming {names[(int)((ulong)count + 2)]}");
-    }
-
-
-    IEnumerator addPlayer(FixedString32Bytes input)
+    IEnumerator addPlayer(string name)
     {
         if (IsServer || IsHost)
         {
@@ -165,34 +174,78 @@ public class serverManager : NetworkBehaviour
         }
         else
         {
-            yield return new WaitForSeconds(3);
+            yield return new WaitForSeconds(0.5f);
         }
 
-        askforConnectedClientsServerRpc(input);
-        AddToUserListServerRpc(input);
+        //askforConnectedClientsServerRpc(input);
+        AddUserDataServerRpc(name, selectedColour);
     }
 
     //[ServerRpc(RequireOwnership = false)]
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    void AddToUserListServerRpc(FixedString32Bytes gamer)
+    void AddUserDataServerRpc(string name, Color colour, RpcParams rpcParams = default)
     {
-        inGameUserList.text += $"\n {gamer}";
-        UpdateClientUserListClientRpc(inGameUserList.text, names);
-    }
+        ulong senderId = rpcParams.Receive.SenderClientId;
 
-    [ClientRpc]
-    void UpdateClientUserListClientRpc(string input, NativeArray<FixedString32Bytes> serverNames)
-    {
-        if (IsServer)
+        players[senderId] = new PlayerData
         {
-            return;
-        }
-        names = serverNames;
-        inGameUserList.text = input;
+            clientID = senderId,
+            name = name,
+            Colour = colour
+        };
 
+        Debug.Log($" utter gaming {players[senderId].clientID}");
+        sendPlayerList();
     }
 
+    void sendPlayerList()
+    {
+        ulong[] ids = players.Keys.ToArray();
+        FixedString32Bytes[] names = players.Values.Select(x => new FixedString32Bytes(x.name)).ToArray();
+        Color[] colours = players.Values.Select(x => x.Colour).ToArray();
 
+        RebuildPlayerListRpc(ids, names, colours);
+
+    }
+    
+    //[ClientRpc]
+    //void AddUserDataClientRpc(ulong clientId, string playerName, Color colour)
+    //{
+    //    if (IsHost) { return; }
+    //    players[clientId] = new PlayerData
+    //    {
+    //        clientID = clientId,
+    //        name = playerName,
+    //        Colour = colour
+    //    };
+    //    Debug.Log($" utter gaming {players[clientId].name}");
+    //    foreach (var player in players)
+    //    {
+    //        Debug.Log($"SERVER: {player.Key} {player.Value.name}");
+    //    }
+    //    updateInGameUserlistServerRpc(playerName);
+        
+       
+    //}
+
+    [Rpc(SendTo.Everyone)]
+    void RebuildPlayerListRpc(ulong[] ids, FixedString32Bytes[] names, Color[] colours)
+    {
+        players.Clear();
+        
+        inGameUserList.text = "";
+        for (int i = 0; i < ids.Length; i++)
+        {
+            players[ids[i]] = new PlayerData
+            {
+                clientID = ids[i],
+                name = names[i].ToString(),
+                Colour = colours[i]
+            };
+            inGameUserList.text += $"\n{names[i]}";
+        }
+
+    }
 
     //[ServerRpc(RequireOwnership = false)]
     //public void BeginRaceServerRpc()
@@ -245,12 +298,10 @@ public class serverManager : NetworkBehaviour
         {
             Debug.Log($"players: {NetworkManager.Singleton.ConnectedClients.Count}");
             
-            
             GameObject playerInstance = Instantiate(playerPrefab);
             NetworkObject networkObject = playerInstance.GetComponent<NetworkObject>();
             Debug.Log(networkObject);
             networkObject.SpawnAsPlayerObject(client.Key);
-            Debug.Log(names[(int)((ulong)i + 3)]);
 
 
             //int plap = UnityEngine.Random.Range(0, 1);
@@ -263,9 +314,8 @@ public class serverManager : NetworkBehaviour
             //    networkObject.transform.position = new Vector3(6.11999989f, 1.07000005f, -22.3899994f);
             //}
 
-            networkObject.transform.GetChild(0).GetComponentInChildren<TMP_Text>().text = names[(int)((ulong)i + 3)].ToString();
-            //networkObject.transform.GetChild(0).GetComponentInChildren<TMP_Text>().color = selectedColour;
-            Debug.Log($" what poppin {networkObject.transform.GetChild(0).GetComponentInChildren<TMP_Text>().text}");
+
+            Debug.Log($" what poppin {/*NetworkManager.Singleton */players[OwnerClientId].name /*transform.GetChild(0).GetComponentInChildren<TMP_Text>().text*/}");
             i++;
         }
 
@@ -274,28 +324,52 @@ public class serverManager : NetworkBehaviour
 
         //GameObject raceEndObj = Instantiate(raceEndDude);
         //raceEndObj.GetComponent<NetworkObject>().Spawn();
-        //StartCoroutine(SetNamePlateCaller());
+        SetNamePlatesServerRpc();
     }
 
     IEnumerator SetNamePlateCaller()
     {
         yield return new WaitForSeconds(3);
-        SetNamePlatesServerRpc();
+        
     }
 
     [ServerRpc]
     void SetNamePlatesServerRpc()
     {
+        int i = 0;
         foreach (var client in NetworkManager.Singleton.ConnectedClients)
         {
-            //client.Value.PlayerObject.GetComponentInChildren<TMP_Text>().text = names[(ulong)i + 3];
+            Debug.Log($"shlapper1 {players[client.Key].name}");
+            try
+            {
 
-            //client.Value.PlayerObject
-            client.Value.PlayerObject.transform.position = new Vector3(1145, 1521, 12);
-
-            //.text = names[(ulong)i + 3];
+                client.Value.PlayerObject.transform.GetChild(0).GetComponentInChildren<TMP_Text>().text = players[client.Key].name;
+                client.Value.PlayerObject.transform.GetChild(0).GetComponentInChildren<TMP_Text>().color = players[client.Key].Colour;
+            }
+            catch (NullReferenceException) { }
+            i++;
         }
+        SetNamePlatesClientRpc();
     }
+
+    [ClientRpc]
+    void SetNamePlatesClientRpc()
+    {
+        int i = 0;
+        foreach (var client in NetworkManager.Singleton.ConnectedClients)
+        {
+            Debug.Log($"shlapper2 {players[client.Key].name}");
+            try
+            {
+                client.Value.PlayerObject.transform.GetChild(0).GetComponentInChildren<TMP_Text>().text = players[client.Key].name;
+                client.Value.PlayerObject.transform.GetChild(0).GetComponentInChildren<TMP_Text>().color = players[client.Key].Colour;
+            }
+            catch (NullReferenceException) { }
+            i++;
+        }
+
+    }
+
 
     void loadingScene()
     {

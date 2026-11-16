@@ -34,7 +34,6 @@ public class playerGamer : NetworkBehaviour
     [SerializeField] Transform defaultLeftArmTarget, defaultRightArmTarget;
 
     [SerializeField] float regenSpeed;
-    private PlayerData playerData;
     UnityEngine.UI.Slider slider;
 
     public bool down, movementEnabled;
@@ -65,7 +64,6 @@ public class playerGamer : NetworkBehaviour
             return;
         }
 
-        playerData = GetComponent<PlayerData>();
         cameraGuy.gameObject.SetActive(true);
         //cameraGuy.gameObject.GetComponent<camera>().enabled = true;
         health = startingHealth;
